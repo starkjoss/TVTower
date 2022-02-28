@@ -6,6 +6,7 @@ Import "common.misc.gamegui.bmx"
 Import "game.screen.base.bmx"
 Import "game.stationmap.bmx"
 Import "game.player.bmx"
+Import "game.player.difficulty.bmx"
 Import "game.room.base.bmx"
 Import "game.roomhandler.base.bmx"
 Import "game.gameeventkeys.bmx"
@@ -733,12 +734,14 @@ Type TGameGUIAntennaPanel Extends TGameGUIBasicStationmapPanel
 			'=== BOX LINE 2 (optional) ===
 			tooltips[2].parentArea.SetXY(-1000,0)
 			If TScreenHandler_StationMap.actionMode = GetBuyActionMode()
-				'TODO: individual build time for stations ("GetStationConstructionTime()")?
-				If GameRules.stationConstructionTime > 0
-					currentY :+ boxH
-					skin.RenderBox(contentX + 5, currentY, halfW-5, -1, GameRules.stationConstructionTime + "h", "runningTime", "neutral", skin.fontNormal)
-					tooltips[2].parentArea.SetXY(contentX + 5, currentY).SetWH(halfW+5, boxH)
-				EndIf
+				'construction time is shown in antenna info and messes up layout here
+				'Local difficulty:TPlayerDifficulty = GetPlayerDifficulty(String(GetPlayerBase().playerID))
+				'Local constructionTime:int=difficulty.antennaConstructionTime
+				'If constructionTime > 0
+				'	currentY :+ boxH
+				'	skin.RenderBox(contentX + 5, currentY, halfW-5, -1, constructionTime + "h", "runningTime", "neutral", skin.fontNormal)
+				'	tooltips[2].parentArea.SetXY(contentX + 5, currentY).SetWH(halfW+5, boxH)
+				'EndIf
 			EndIf
 
 			'=== BOX LINE 3 ===
@@ -1061,12 +1064,13 @@ Type TGameGUICableNetworkPanel Extends TGameGUIBasicStationmapPanel
 			'=== BOX LINE 2 (optional) ===
 			tooltips[2].parentArea.SetXY(-1000,0)
 			If TScreenHandler_StationMap.actionMode = GetBuyActionMode()
-				'TODO: individual build time for stations ("GetStationConstructionTime()")?
-				If GameRules.stationConstructionTime > 0
-					currentY :+ boxH
-					skin.RenderBox(contentX + 5, currentY, halfW-5, -1, GameRules.stationConstructionTime + "h", "runningTime", "neutral", skin.fontNormal)
-					tooltips[2].parentArea.SetXY(contentX + 5, currentY).SetWH(halfW+5, boxH)
-				EndIf
+				'construction time is shown in cable info and messes up layout here
+				'code would have to be adapted like for antenna
+				'If difficulty.antennaConstructionTime > 0
+				'	currentY :+ boxH
+				'	skin.RenderBox(contentX + 5, currentY, halfW-5, -1, difficulty.antennaConstructionTime + "h", "runningTime", "neutral", skin.fontNormal)
+				'	tooltips[2].parentArea.SetXY(contentX + 5, currentY).SetWH(halfW+5, boxH)
+				'EndIf
 			EndIf
 
 			'=== BOX LINE 3 ===
@@ -1457,12 +1461,13 @@ endrem
 			tooltips[2].parentArea.SetXY(-1000,0)
 
 			If TScreenHandler_StationMap.actionMode = GetBuyActionMode()
-				'TODO: individual build time for stations ("GetStationConstructionTime()")?
-				If GameRules.stationConstructionTime > 0
-					currentY :+ boxH
-					skin.RenderBox(contentX + 5, currentY, halfW-5, -1, GameRules.stationConstructionTime + "h", "runningTime", "neutral", skin.fontNormal)
-					tooltips[2].parentArea.SetXY(contentX + 5, currentY).SetWH(halfW+5, boxH)
-				EndIf
+				'TODO construction time is NOT shown in satellite info and messes up layout here
+				'code would have to be adapted like for antenna
+				'If difficulty.satelliteConstructionTime > 0
+				'	currentY :+ boxH
+				'	skin.RenderBox(contentX + 5, currentY, halfW-5, -1, difficulty.satelliteConstructionTime + "h", "runningTime", "neutral", skin.fontNormal)
+				'	tooltips[2].parentArea.SetXY(contentX + 5, currentY).SetWH(halfW+5, boxH)
+				'EndIf
 			EndIf
 
 			If selectedStation

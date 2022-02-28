@@ -14,6 +14,7 @@ Import "Dig/base.gfx.sprite.bmx"
 Import "Dig/base.gfx.bitmapfont.bmx"
 Import "Dig/base.framework.entity.bmx"
 Import "game.gamerules.bmx"
+Import "game.player.difficulty.bmx"
 Import "game.player.color.bmx"
 Import "game.player.finance.bmx"
 Import "game.publicimage.bmx"
@@ -3169,24 +3170,33 @@ Type TStationBase Extends TOwnedGameObject {_exposeToLua="selected"}
 
 
 	Method GetConstructionTime:Int()
-		If GameRules.stationConstructionTime = 0 Then Return 0
-
-		'only need to resume...
-		If IsShutDown()
-			Return 1 * GameRules.stationConstructionTime
+		Local difficulty:TPlayerDifficulty = GetPlayerDifficulty(String(owner))
+		Local contstructionTime:int
+		If isAntenna()
+			contstructionTime = difficulty.antennaConstructionTime
+		ElseIf IsCableNetworkUplink()
+			contstructionTime = difficulty.cableNetworkConstructionTime
+		Else
+			contstructionTime = difficulty.satelliteConstructionTime
 		EndIf
+
+		If contstructionTime = 0 Then Return 0
+
+		if IsShutDown()
+			Return 1 * contstructionTime
+		endif
 
 		Local r:Int = GetReach()
 		If r < 500000
-			Return 1 * GameRules.stationConstructionTime
+			Return 1 * contstructionTime
 		ElseIf r < 1000000
-			Return 2 * GameRules.stationConstructionTime
+			Return 2 * contstructionTime
 		ElseIf r < 2500000
-			Return 3 * GameRules.stationConstructionTime
+			Return 3 * contstructionTime
 		ElseIf r < 5000000
-			Return 4 * GameRules.stationConstructionTime
+			Return 4 * contstructionTime
 		Else
-			Return 5 * GameRules.stationConstructionTime
+			Return 5 * contstructionTime
 		EndIf
 	End Method
 
@@ -3688,7 +3698,7 @@ Type TStationAntenna Extends TStationBase {_exposeToLua="selected"}
 			buyPrice :+ 0.20 * GetStationMapCollection().CalculateTotalAntennaStationReach(X, Y, 20)
 		EndIf
 
-
+		buyPrice :* GetPlayerDifficulty(String(owner)).antennaBuyPriceMod
 		'no further costs
 
 
@@ -3705,25 +3715,19 @@ Type TStationAntenna Extends TStationBase {_exposeToLua="selected"}
 		If HasFlag(TVTStationFlag.NO_RUNNING_COSTS) Then Return 0
 
 		Local result:Int = 0
+		Local difficulty:TPlayerDifficulty=GetPlayerDifficulty(String(owner))
 
 		'== ADD STATIC RUNNING COSTS ==
-		result :+ 5000 * Ceil(GetBuyPrice() / 25000.0)
-
+		result :+ Ceil(GetBuyPrice() / 5.0)
+		result :* difficulty.antennaDailyCostsMod
 		'== ADD RELATIVE MAINTENANCE COSTS ==
-		If GameRules.stationIncreaseDailyMaintenanceCosts
-			'the older a station gets, the more the running costs will be
-			'(more little repairs and so on)
-			'2% per day
-			Local maintenanceCostsPercentage:Int = GameRules.stationDailyMaintenanceCostsPercentage * GetAgeInDays()
-			'negative values deactivate the limit, positive once limit it
-			If GameRules.stationDailyMaintenanceCostsPercentageTotalMax >= 0
-				maintenanceCostsPercentage = Min(maintenanceCostsPercentage, GameRules.stationDailyMaintenanceCostsPercentageTotalMax)
-			EndIf
+		Local maintenanceCostPercentage:Float=difficulty.antennaDailyCostsIncrease
+		if maintenanceCostPercentage > 0
+			maintenanceCostPercentage = Min(difficulty.antennaDailyCostsIncreaseMax, maintenanceCostPercentage * GetAgeInDays())
+			result :* (1.0 + maintenanceCostPercentage)
+		endif
 
-			'1000 is "block size"
-			result = 1000*Int( (result * (1.0 + maintenanceCostsPercentage))/1000 )
-		EndIf
-
+		result = 1000 * int (result / 1000)
 		Return result
 	End Method
 
@@ -3969,7 +3973,7 @@ Type TStationCableNetworkUplink Extends TStationBase {_exposeToLua="selected"}
 		'cable network provider costs
 		buyPrice :+ cableNetwork.GetSetupFee(owner)
 
-
+		buyPrice :* GetPlayerDifficulty(String(owner)).cableNetworkBuyPriceMod
 		'round it to 5000-steps
 		buyPrice = Max(0 , Int(Ceil(buyPrice / 5000)) * 5000 )
 
@@ -4007,7 +4011,8 @@ Type TStationCableNetworkUplink Extends TStationBase {_exposeToLua="selected"}
 		'maintenance costs for the uplink to the cable network
 		result :+ maintenanceCosts
 
-		Return result
+		Result:* GetPlayerDifficulty(String(owner)).cableNetworkDailyCostsMod
+		return result
 	End Method
 
 
@@ -4379,6 +4384,7 @@ Type TStationSatelliteUplink Extends TStationBase {_exposeToLua="selected"}
 		'maintenance costs for the uplink to the satellite
 		result :+ maintenanceCosts
 
+		result:* GetPlayerDifficulty(String(owner)).satelliteDailyCostsMod
 		Return result
 	End Method
 
@@ -4423,7 +4429,7 @@ Type TStationSatelliteUplink Extends TStationBase {_exposeToLua="selected"}
 		'costs for the satellite provider
 		buyPrice :+ satellite.GetSetupFee(owner)
 
-
+		buyPrice :* GetPlayerDifficulty(String(owner)).satelliteBuyPriceMod
 		'round it to 5000-steps
 		buyPrice = Max(0 , Int(Ceil(buyPrice / 5000)) * 5000 )
 
@@ -4788,6 +4794,7 @@ Type TStationMapSection
 	Method GetBroadcastPermissionPrice:Int(channelID:Int, stationType:Int=-1)
 		'fixed price
 		If broadcastPermissionPrice <> -1 Then Return broadcastPermissionPrice
+		Local difficulty:TPlayerDifficulty = GetPlayerDifficulty(String(channelID))
 
 		'calculate based on population (maybe it changes)
 		'or some other effects
@@ -4795,7 +4802,7 @@ Type TStationMapSection
 
 		'adjust by sympathy (up to 25% discount or 25% on top)
 		result :- 0.25 * result * GetChannelSympathy(channelID)
-
+		result :* difficulty.broadcastPermissionPriceMod
 		Return result
 	End Method
 

@@ -2530,6 +2530,26 @@ Type TSaveGame Extends TGameState
 
 	Global _nilNode:TNode = New TNode._parent
 	Function RepairData(savegameVersion:Int)
+		If savegameVersion <= 18
+			GetPlayerDifficultyCollection().InitializeDefaults()
+			For local pID:Int = 1 to 4
+				Local playerDifficulty:TPlayerDifficulty = GetPlayerDifficulty(String(pID))
+				If playerDifficulty
+					If playerDifficulty.antennaBuyPriceMod < 0.1
+						'buy price mod newly introduced, value must be >=0.1
+						'replace difficulty object completely with corresponding new defaults
+						Local newDifficulty:TPlayerDifficulty = GetPlayerDifficultyCollection().getByGUID(playerDifficulty.GetGUID())
+						If not newDifficulty or newDifficulty.antennaBuyPriceMod < 0.1
+							throw "replacing difficulty data for player "+pID+" failed"
+						Else
+							GetPlayerDifficultyCollection().RemoveByID(playerDifficulty.GetID())
+							GetPlayerDifficultyCollection().AddToPlayer(pID, newDifficulty)
+							print "RepairData: difficulty data for player " + pID+" - replace with current data for level "+playerDifficulty.GetGUID()
+						EndIf
+					EndIF
+				EndIf
+			Next
+		EndIf
 		If savegameVersion < 18
 			TLogger.Log("RepairData", "Removing AI-Events", LOG_SAVELOAD | LOG_DEBUG)
 			For Local i:Int = 1 To 4
@@ -2538,7 +2558,7 @@ Type TSaveGame Extends TGameState
 					p.playerAI.eventQueue = new TAIEvent[0]
 				EndIf
 			Next
-		EndIF
+		EndIf
 		If savegameVersion < 16
 			'programme producers were not persisted before v16
 			If GetProgrammeProducerCollection().GetCount() < 1

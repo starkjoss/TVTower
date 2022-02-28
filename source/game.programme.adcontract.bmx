@@ -411,13 +411,6 @@ Type TAdContractBase Extends TBroadcastMaterialSource {_exposeToLua}
 	'percents = 0.0 - 1.0 (0-100%)
 	Method GetMinAudiencePercentage:Float(value:Float = -1)
 		If value < 0 Then value = minAudienceBase
-
-		'modify according to dev-balancing
-		Local devConfig:TData = TData(GetRegistry().Get("DEV_CONFIG"))
-		If devConfig
-			value :* devConfig.GetFloat("DEV_ADCONTRACT_MINAUDIENCEPERCENTAGE_MOD", 1.0)
-		EndIf
-
 		Return MathHelper.Clamp(value, 0.0, 1.0)
 	End Method
 
@@ -445,8 +438,7 @@ Type TAdContractBase Extends TBroadcastMaterialSource {_exposeToLua}
 
 		Local result:Int = GetMinAudiencePercentage() * useAudience
 
-		'DEV: adjust by a balancing factor
-		result :* GameRules.devConfig.GetFloat("DEV_ADCONTRACT_RAWMINAUDIENCE_MOD", 1.0)
+		result :* GetPlayerDifficulty(String(playerID)).adcontractRawMinAudienceMod
 
 		Return result
 	End Method
@@ -1114,12 +1106,6 @@ Type TAdContract Extends TBroadcastMaterialSource {_exposeToLua="selected"}
 
 		Local result:Int = CalculatePricesForPlayer(base.profitBase, playerID, PRICETYPE_PROFIT) * GetSpotCount()
 
-		'DEV: adjust by a balancing factor
-		Local devConfig:TData = TData(GetRegistry().Get("DEV_CONFIG"))
-		If devConfig
-			result :* GameRules.devConfig.GetFloat("DEV_ADCONTRACT_PROFIT_MOD", 1.0)
-		EndIf
-
 		Return result
 	End Method
 
@@ -1151,13 +1137,7 @@ Type TAdContract Extends TBroadcastMaterialSource {_exposeToLua="selected"}
 			result = CalculatePricesForPlayer(base.infomercialProfitBase, playerID, PRICETYPE_INFOMERCIALPROFIT)
 		EndIf
 
-		'DEV:
-		'by which factor do we cut the profit when send as infomercial
-		'compared to the profit a single ad would generate
-		Local devConfig:TData = TData(GetRegistry().Get("DEV_CONFIG"))
-		If devConfig
-			result :* GameRules.devConfig.GetFloat("DEV_ADCONTRACT_INFOMERCIAL_PROFIT_MOD", 1.0)
-		EndIf
+		result :* GetPlayerDifficulty(String(playerID)).adcontractInfomercialProfitMod
 
 		Return result
 	End Method
@@ -1177,12 +1157,6 @@ Type TAdContract Extends TBroadcastMaterialSource {_exposeToLua="selected"}
 		EndIf
 
 		Local result:Int = CalculatePricesForPlayer(base.penaltyBase, playerID, PRICETYPE_PENALTY) * GetSpotCount()
-
-		'DEV: adjust by a balancing factor
-		Local devConfig:TData = TData(GetRegistry().Get("DEV_CONFIG"))
-		If devConfig
-			result :* GameRules.devConfig.GetFloat("DEV_ADCONTRACT_PENALTY_MOD", 1.0)
-		EndIf
 
 		Return result
 	End Method
@@ -1234,13 +1208,13 @@ Type TAdContract Extends TBroadcastMaterialSource {_exposeToLua="selected"}
 
 
 		'=== DYNAMIC PRICE ===
-		Local devConfig:TData = TData(GetRegistry().Get("DEV_CONFIG", New TData))
-		Local devPriceMod:Float = devConfig.GetFloat("DEV_ADCONTRACT_PRICE_MOD", 1.0)
-		Local limitedToGenreMultiplier:Float = devConfig.GetFloat("DEV_ADCONTRACT_LIMITED_GENRE_MULTIPLIER", 1.5)
-		Local limitedToProgrammeFlagMultiplier:Float = devConfig.GetFloat("DEV_ADCONTRACT_LIMITED_PROGRAMME_FLAG_MULTIPLIER", 1.25)
-		Local limitedToTargetGroupMultiplier:Float = devConfig.GetFloat("DEV_ADCONTRACT_LIMITED_TARGETGROUP_MULTIPLIER", 1.0)
+		Local difficulty:TPlayerDifficulty = GetPlayerDifficulty(String(playerID))
+		Local devPriceMod:Float = difficulty.adcontractPriceMod
+		Local limitedToGenreMultiplier:Float = difficulty.adcontractLimitedGenreMod
+		Local limitedToProgrammeFlagMultiplier:Float = difficulty.adcontractLimitedProgrammeFlagMod
+		Local limitedToTargetGroupMultiplier:Float = difficulty.adcontractLimitedTargetgroupMod
 
-		Local maxCPM:Float = GameRules.adContractPricePerSpotMax / Max(1, (population/1000))
+		Local maxCPM:Float = difficulty.adContractPricePerSpotMax / Max(1, (population/1000))
 		Local price:Float
 
 		Local minAudience:Int = GetTotalMinAudienceForPlayer(playerID)
@@ -1258,9 +1232,7 @@ price :* Max(1, minAudience/1000)
 		'multiply by amount of "1000 viewers"-blocks (_not_ ignoring targetGroups)
 		'price :* Max(1, getMinAudience(playerID)/1000)
 		'value cannot be higher than "maxAdContractPricePerSpot"
-		If GameRules.adContractPricePerSpotMax > 0
-			price = Min(GameRules.adContractPricePerSpotMax, price )
-		EndIf
+		price = Min(difficulty.adContractPricePerSpotMax, price )
 		'adjust by a balancing factor
 		price :* devPriceMod
 
@@ -1273,7 +1245,9 @@ price :* Max(1, minAudience/1000)
 
 		'adjust by a player difficulty
 		If priceType = PRICETYPE_PROFIT
-			price :* GetPlayerDifficulty(String(playerID)).advertisementProfitMod
+			price :* difficulty.adcontractProfitMod
+		ElseIf priceType = PRICETYPE_PENALTY
+			price :* difficulty.adcontractPenaltyMod
 		EndIf
 
 		'print GetTitle()+": minAud%="+GetMinAudiencePercentage() +"  price=" +price +"  rawAud="+getRawMinAudienceForPlayer(playerID) +"  targetGroup="+GetLimitedToTargetGroup()

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<difficulties>
+	<easy>
+		<startMoney value="750000"/>
+		<startCredit value="250000"/>
+		<programmePriceMod value="0.75"/>
+		<roomRentMod value="0.80"/>
+		<adcontractProfitMod value="1.25"/>
+		<antennaBuyPriceMod value="0.80"/>
+		<adjustRestartingPlayersToOtherPlayersMod value="1.25"/> 
+	</easy>
+	<normal>
+	</normal>
+	<hard>
+		<startMoney value="0"/>
+		<creditMaximum value="500000"/>
+		<programmePriceMod value="1.1"/>
+		<roomRentMod value="1.15"/>
+		<adcontractProfitMod value="0.9"/>
+		<antennaBuyPriceMod value="1.15"/>
+		<adjustRestartingPlayersToOtherPlayersMod value="0.85"/> 
+	</hard>
+
+	<!-- defaults, in case the actual levels do not want to define their own values -->
+	<defaults>
+		<startMoney value="250000"/>
+		<startCredit value="500000"/>
+		<!-- TODO instead of maximum credit configure credit base multiplier (now fixed 25000)-->
+		<creditMaximum value="600000"/>
+		<programmePriceMod value="1.0"/>
+		<roomRentMod value="1.0"/>
+
+		<adContractPricePerSpotMax value="1000000"/>
+		<adcontractPriceMod value="1.0"/><!-- general balancing factor for profit/penalty values -->
+		<adcontractProfitMod value="1.0"/>
+		<adcontractPenaltyMod value="1.0"/>
+		<adcontractInfomercialProfitMod value="1.0"/>
+		<!-- TODO a global value for all target groups seems not enough
+			the factor for children/teenagers should be higher than for men;
+			generally, the smaller the target group the higher the modifier-->
+		<adcontractLimitedTargetgroupMod value="1.0"/><!-- profit/penalty factor if target group is limited-->
+		<adcontractLimitedGenreMod value="1.5"/><!-- profit/penalty factor if genre is limited -->
+		<adcontractLimitedProgrammeFlagMod value="1.25"/><!-- profit/penalty factor if programme flags are limited -->
+		<adcontractRawMinAudienceMod value="1.0"/><!-- factor for number of viewers required-->
+
+		<!--construction times in hours-->
+		<antennaBuyPriceMod value="1.0"/>
+		<antennaConstructionTime value="0"/>
+		<antennaDailyCostsMod value="1.0"/>
+		<antennaDailyCostsIncrease value="0.0"/><!--increasing maintenance costs: 0.02 = 2%-->
+		<antennaDailyCostsIncreaseMax value="0"/><!--maximum increase due to maintenance costs: 0.2 = 20%-->
+		<cableNetworkBuyPriceMod value="1.0"/>
+		<cableNetworkConstructionTime value ="0"/>
+		<cableNetworkDailyCostsMod value="1.0"/>
+		<satelliteBuyPriceMod value="1.0"/>
+		<satelliteConstructionTime value ="0"/>
+		<satelliteDailyCostsMod value="1.0"/>
+		<broadcastPermissionPriceMod value="1.0"/>
+
+		<adjustRestartingPlayersToOtherPlayersMod value="1.0"/><!-- TODO similar values also in gamerules--> 
+	</defaults>
+
+	<!-- properties not yet part of the difficulty object-->
+	<notYetMigrated>
+		<!-- from game.gamerules - proposed for moving to difficulty -->
+		<adjustRestartingPlayersToOtherPlayersX value =""/><!-- TODO test whether these currently work -->
+
+		<bettyLoveToGetMasterKey value=""/>
+		<baseProductionTimeHours value=""/>
+		<payLiveProductionInAdvance value=""/>
+		<sentXRatedPenalty value=""/>
+		<!-- to discuss: there could be a gamesettings file for each map, 
+			so that start positions for each difficulty level can be defined
+			alternatively, the maps propose different locations per level
+			currently the position of the initial station is hard coded and determines
+			the antenna radius per start year
+			alternatively the code analyzes the map and randomly creates a sensible start position for
+			each level
+		 -->
+		<stationInitialIntendedReach value=""/>
+
+		<!-- proposed additional modifiers see also #126 -->
+		<reachLevelMod value=""/> <!-- earlier/later reach level increase per difficulty level -->
+
+		<newsItemPriceMod value=""/>
+
+		<initialStationMaintentenanceCostMod value=""/><!-- first station not always for free -->
+		<initialStudioRentMod value=""/><!-- first studio not always for free -->
+		<interestRateCredit value=""/><!-- interest rate to pay for credit-->
+		<interestRateBalance value=""/><!-- interest rate received for positive balance (allow negative value?) -->
+		<!-- TODO modifiers for licences
+			* faster max topicality loss when often repeated
+			* slower topicality regeneration when often repeated
+			* maximal broadcast number (if unlimited)? - auto-return to agency and refill
+		 -->
+	</notYetMigrated>
+</difficulties>

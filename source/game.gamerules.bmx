@@ -3,12 +3,6 @@ Import "Dig/base.util.data.bmx"
 
 'specific variables shared across the whole game
 Type TGameRules {_exposeToLua}
-	'how many movies does a player get on a new game
-	Field startMovieAmount:Int = 5
-	'how many series does a player get on a new game
-	Field startSeriesAmount:Int = 1
-	'how many contracts a player gets on a new game
-	Field startAdAmount:Int = 3
 	'should a game start with a credit already given
 	Field startGameWithCredit:Int = True
 	'should licence attributes from the database be randomized
@@ -85,8 +79,6 @@ Type TGameRules {_exposeToLua}
 	'use a lower value, to slow down the game then (movement + time)
 	Field InRoomTimeSlowDownMod:Float = 1.0
 
-	Field startProgrammeAmount:int = 0
-	
 	'how many productions (jobs, so theoretically less productions)
 	'are required to make a person a celebrity
 	Field UpgradeInsignificantOnProductionJobsCount:Int = 3
@@ -106,8 +98,6 @@ Type TGameRules {_exposeToLua}
 	'how many contracts of the same contractBase can exist at the
 	'same time? (0 disables any limit)
 	Field adContractInstancesMax:int = 1
-	'maximum price (profit/penalty) for a single adspot
-	Field adContractPricePerSpotMax:int = 1000000
 
 	'=== ADAGENCY ===
 	Field adagencySortContractsBy:string = "minaudience"
@@ -118,15 +108,6 @@ Type TGameRules {_exposeToLua}
 
 	'=== STATIONMAP ===
 	Field stationInitialIntendedReach:int = 950000
-	'time a station needs to get constructed
-	'value in hours
-	'set to default (0) on start (game.game.bmx prepareNewGame())
-	Field stationConstructionTime:int = 0
-	Field cableNetworkConstructionTime:int = 0
-	'increase costs by X percent each day after construction of a station?
-	Field stationIncreaseDailyMaintenanceCosts:int = False
-	Field stationDailyMaintenanceCostsPercentage:Float = 0.02
-	Field stationDailyMaintenanceCostsPercentageTotalMax:Float = 0.30
 
 
 	'=== DEV.xml ===
@@ -140,7 +121,6 @@ Type TGameRules {_exposeToLua}
 		elevatorSpeed = 160
 		elevatorWaitAtFloorTime = 1500
 
-		stationConstructionTime = 0
 
 		adagencySortContractsBy = "minaudience"
 		adagencyRefillMode = 2 'new one
@@ -149,7 +129,6 @@ Type TGameRules {_exposeToLua}
 
 		adContractInstancesMax = 1
 		adContractsPerPlayerMax = 12
-		adContractPricePerSpotMax = 1000000
 
 
 		AssignFromData(devConfig)
@@ -165,10 +144,6 @@ Type TGameRules {_exposeToLua}
 
 		adContractInstancesMax = data.GetInt("DEV_ADCONTRACT_INSTANCES_MAX", adContractInstancesMax)
 		adContractsPerPlayerMax = data.GetInt("DEV_ADCONTRACTS_PER_PLAYER_MAX", adContractsPerPlayerMax)
-		adContractPricePerSpotMax = data.GetInt("DEV_ADCONTRACT_PRICE_PER_SPOT_MAX", adContractPricePerSpotMax)
-		if data.GetInt("DEV_ADCONTRACT_PRICE_PER_SPOT_MAX", 0) > 0
-			adContractPricePerSpotMax = data.GetInt("DEV_ADCONTRACT_PRICE_PER_SPOT_MAX")
-		endif
 
 		'=== ADAGENCY ===
 		adagencySortContractsBy = data.GetString("DEV_ADAGENCY_SORT_CONTRACTS_BY", adagencySortContractsBy).Trim().ToLower()
@@ -186,10 +161,6 @@ Type TGameRules {_exposeToLua}
 
 		'=== STATION(MAP) ===
 		stationInitialIntendedReach = data.GetInt("DEV_STATION_INITIAL_INTENDED_REACH", stationInitialIntendedReach)
-		stationConstructionTime = data.GetInt("DEV_STATION_CONSTRUCTION_TIME", 0)
-		stationIncreaseDailyMaintenanceCosts = data.GetBool("DEV_STATION_INCREASE_DAILY_MAINTENANCE_COSTS", stationIncreaseDailyMaintenanceCosts)
-		stationDailyMaintenanceCostsPercentage = data.GetFloat("DEV_STATION_DAILY_MAINTENANCE_COSTS_PERCENTAGE", stationDailyMaintenanceCostsPercentage)
-		stationDailyMaintenanceCostsPercentageTotalMax = data.GetFloat("DEV_STATION_DAILY_MAINTENANCE_COSTS_PERCENTAGE_TOTAL_MAX", stationDailyMaintenanceCostsPercentageTotalMax)
 
 		return True
 	End Method
