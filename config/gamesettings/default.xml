@@ -7,30 +7,42 @@
 		<roomRentMod value="0.80"/>
 		<adcontractProfitMod value="1.25"/>
 		<antennaBuyPriceMod value="0.80"/>
-		<adjustRestartingPlayersToOtherPlayersMod value="1.25"/> 
 	</easy>
 	<normal>
 	</normal>
 	<hard>
 		<startMoney value="0"/>
-		<creditMaximum value="500000"/>
+		<creditMinimum value="500000"/>
 		<programmePriceMod value="1.1"/>
-		<roomRentMod value="1.15"/>
+		<roomRentMod value="1.5"/>
 		<adcontractProfitMod value="0.9"/>
-		<antennaBuyPriceMod value="1.15"/>
-		<adjustRestartingPlayersToOtherPlayersMod value="0.85"/> 
+		<antennaBuyPriceMod value="1.5"/>
+		<antennaDailyCostsMod value="1.25"/>
+		<antennaDailyCostsIncrease value="0.02"/><!--increasing maintenance costs: 0.02 = 2%-->
+		<antennaDailyCostsIncreaseMax value="0.25"/><!--maximum increase due to maintenance costs: 0.2 = 20%-->
+		<cableNetworkBuyPriceMod value="1.5"/>
+		<cableNetworkDailyCostsMod value="1.25"/>
+		<satelliteBuyPriceMod value="1.5"/>
+		<satelliteDailyCostsMod value="1.25"/>
+		<broadcastPermissionPriceMod value="1.5"/>
 	</hard>
 
 	<!-- defaults, in case the actual levels do not want to define their own values -->
 	<defaults>
 		<startMoney value="250000"/>
 		<startCredit value="500000"/>
-		<!-- TODO instead of maximum credit configure credit base multiplier (now fixed 25000)-->
-		<creditMaximum value="600000"/>
+		<creditMinimum value="600000"/>
+		<creditBaseValue value="25000"/><!--credit factor for each 500000 of company value-->
+		<interestRateCredit value="0.05"/>
+		<interestRatePositiveBalance value="0.01"/><!--TODO negative interest rate does not work-->
+		<interestRateNegativeBalance value="0.03"/>
 		<programmePriceMod value="1.0"/>
+		<newsItemPriceMod value="1.0"/>
 		<roomRentMod value="1.0"/>
+		<productionTimeMod value="1.0"/>
+		<sentXRatedPenalty value="25000"/> <!-- TODO maybe also multiply with reach level or factor based on reach (see news item price) -->
+		<sentXRatedConfiscateRisk value="25"/><!-- risk of a confiscation: 0-100 -->
 
-		<adContractPricePerSpotMax value="1000000"/>
 		<adcontractPriceMod value="1.0"/><!-- general balancing factor for profit/penalty values -->
 		<adcontractProfitMod value="1.0"/>
 		<adcontractPenaltyMod value="1.0"/>
@@ -57,18 +69,15 @@
 		<satelliteDailyCostsMod value="1.0"/>
 		<broadcastPermissionPriceMod value="1.0"/>
 
-		<adjustRestartingPlayersToOtherPlayersMod value="1.0"/><!-- TODO similar values also in gamerules--> 
+		<!--TODO discuss restarting player before merge -->
+		<restartingPlayerPropertyCacheRatio value="0.25"/><!-- factor worth of other players' programme--> 
+		<restartingPlayerReachRatio value="1.0"/><!-- --> 
+		<restartingPlayerMoneyRatio value="1.0"/><!-- --> 
 	</defaults>
 
 	<!-- properties not yet part of the difficulty object-->
 	<notYetMigrated>
-		<!-- from game.gamerules - proposed for moving to difficulty -->
-		<adjustRestartingPlayersToOtherPlayersX value =""/><!-- TODO test whether these currently work -->
-
-		<bettyLoveToGetMasterKey value=""/>
-		<baseProductionTimeHours value=""/>
-		<payLiveProductionInAdvance value=""/>
-		<sentXRatedPenalty value=""/>
+		<!-- from game.gamerules -->
 		<!-- to discuss: there could be a gamesettings file for each map, 
 			so that start positions for each difficulty level can be defined
 			alternatively, the maps propose different locations per level
@@ -76,19 +85,21 @@
 			the antenna radius per start year
 			alternatively the code analyzes the map and randomly creates a sensible start position for
 			each level
+
+			for this to work the overlap calculation must be able to handle different antenna radius values
 		 -->
 		<stationInitialIntendedReach value=""/>
 
+
+
+		<!-- not migration intended-->
+		<bettyLoveToGetMasterKey value=""/> <!-- do not migrate -  master key practically irrelevant -->
+		<baseProductionTimeHours value=""/> <!-- or rather productionTimeMod; production time defined in script would not be affected otherwise -->
+		<payLiveProductionInAdvance value=""/> <!-- no migration, not relevant-->
+
 		<!-- proposed additional modifiers see also #126 -->
-		<reachLevelMod value=""/> <!-- earlier/later reach level increase per difficulty level -->
-
-		<newsItemPriceMod value=""/>
-
-		<initialStationMaintentenanceCostMod value=""/><!-- first station not always for free -->
-		<initialStudioRentMod value=""/><!-- first studio not always for free -->
-		<interestRateCredit value=""/><!-- interest rate to pay for credit-->
-		<interestRateBalance value=""/><!-- interest rate received for positive balance (allow negative value?) -->
-		<!-- TODO modifiers for licences
+		<reachLevelMod value=""/> <!-- too complicated; earlier/later reach level increase per difficulty level -->
+		<!-- modifiers for licences? rather make it harder by reducing profit margin...
 			* faster max topicality loss when often repeated
 			* slower topicality regeneration when often repeated
 			* maximal broadcast number (if unlimited)? - auto-return to agency and refill

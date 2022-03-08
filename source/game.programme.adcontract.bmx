@@ -1137,8 +1137,6 @@ Type TAdContract Extends TBroadcastMaterialSource {_exposeToLua="selected"}
 			result = CalculatePricesForPlayer(base.infomercialProfitBase, playerID, PRICETYPE_INFOMERCIALPROFIT)
 		EndIf
 
-		result :* GetPlayerDifficulty(String(playerID)).adcontractInfomercialProfitMod
-
 		Return result
 	End Method
 
@@ -1175,18 +1173,10 @@ Type TAdContract Extends TBroadcastMaterialSource {_exposeToLua="selected"}
 	End Method
 
 
-	Function GetCPM:Double(baseCPM:Double, maxCPM:Double, influence:Float)
-		'no money - ignore influence
-		If baseCPM = 0 Then Return 0
-		'lower cpm means it should not get influenced either
-		If baseCPM < maxCPM Then Return baseCPM
-
-		'at "strength" the logisticalInfluence_Euler changes growth direction
-		'so we have to scale back the percentage
-		Local logisticInfluence:Float =	THelper.LogisticalInfluence_Euler(influence, 3)
-
-		'at least return maxCPM
-		Return Max(maxCPM, maxCPM + (baseCPM - maxCPM)*(1.0-logisticInfluence))
+	Function GetCPM:Double(baseCPM:Double, marketShare:Float)
+		'factor for income per spot decreases with increasing market share
+		'30% off base when reaching all viewers
+		return baseCPM * (1 - 0.3 * marketShare)
 	End Function
 
 
@@ -1214,10 +1204,10 @@ Type TAdContract Extends TBroadcastMaterialSource {_exposeToLua="selected"}
 		Local limitedToProgrammeFlagMultiplier:Float = difficulty.adcontractLimitedProgrammeFlagMod
 		Local limitedToTargetGroupMultiplier:Float = difficulty.adcontractLimitedTargetgroupMod
 
-		Local maxCPM:Float = difficulty.adContractPricePerSpotMax / Max(1, (population/1000))
 		Local price:Float
 
 		Local minAudience:Int = GetTotalMinAudienceForPlayer(playerID)
+		Local reach:Int = GetStationMap(playerID, True).GetReach()
 
 'calculate a price/CPM using the "getCPM"-function
 'use the already rounded minAudience to avoid a raw audience of
@@ -1226,18 +1216,31 @@ Type TAdContract Extends TBroadcastMaterialSource {_exposeToLua="selected"}
 'ATTENTION: use getTotalMinAudience() to base CPM on the rounded
 '           value IGNORING potential targetgroup limits. This
 '           leads to some kind of "beautified" percentage value.
-price = GetCPM(baseValue, maxCPM, minAudience / population)
+price = GetCPM(baseValue, Float(reach) / population)
+
+rem
+if playerID = 1 and priceType = PRICETYPE_PROFIT
+	print getTitle() + " baseValue: "+ baseValue
+	For local aud:Int = EachIn [600000,1200000,2400000,4800000,9600000,19200000,38400000,76800000]
+		local minAud:Int = base.GetMinAudienceForPlayer(playerID,False, aud)
+		Local cpm:Float = GetCPM(baseValue,  Float(aud) / (population))
+		Local p:Int= TFunctions.RoundToBeautifulValue(cpm * Max(1, minAud/1000))
+		print "  aud: "+aud+" minAud: "+ minAud+ " cpm: "+cpm +" price: " + p
+	Next
+endif
+endrem
+
 'multiply by amount of "1000 viewers"-blocks (ignoring targetGroups)
 price :* Max(1, minAudience/1000)
 		'multiply by amount of "1000 viewers"-blocks (_not_ ignoring targetGroups)
 		'price :* Max(1, getMinAudience(playerID)/1000)
-		'value cannot be higher than "maxAdContractPricePerSpot"
-		price = Min(difficulty.adContractPricePerSpotMax, price )
 		'adjust by a balancing factor
 		price :* devPriceMod
 
+		Local targetGroups:Int = GetLimitedToTargetGroup()
+		Local hasNonTrivialTargetGroup:Int = targetGroups > 0 and not (targetGroups & (TVTTargetGroup.WOMEN | TVTTargetGroup.MEN))
 		'specific targetgroups change price
-		If GetLimitedToTargetGroup() > 0 Then price :* limitedToTargetGroupMultiplier
+		If hasNonTrivialTargetGroup Then price :* limitedToTargetGroupMultiplier
 		'limiting to specific genres change the price too
 		If GetLimitedToProgrammeGenre() > 0 Then price :* limitedToGenreMultiplier
 		'limiting to specific flags change the price too
@@ -1248,6 +1251,8 @@ price :* Max(1, minAudience/1000)
 			price :* difficulty.adcontractProfitMod
 		ElseIf priceType = PRICETYPE_PENALTY
 			price :* difficulty.adcontractPenaltyMod
+		ElseIf priceType = PRICETYPE_INFOMERCIALPROFIT
+			price :* difficulty.adcontractInfomercialProfitMod
 		EndIf
 
 		'print GetTitle()+": minAud%="+GetMinAudiencePercentage() +"  price=" +price +"  rawAud="+getRawMinAudienceForPlayer(playerID) +"  targetGroup="+GetLimitedToTargetGroup()

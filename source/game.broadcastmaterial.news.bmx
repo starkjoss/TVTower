@@ -407,6 +407,8 @@ endrem
 		price :+ priceModRelativeNewsAgency * price
 		price :+ priceModAbsoluteNewsAgency
 
+		price :* GetPlayerDifficulty(String(owner)).newsItemPriceMod
+
 		'adjust by broadcast area
 		'multiply by amount of "5 million" people blocks
 		local map:TStationMap = GetStationMap(owner)

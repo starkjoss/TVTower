@@ -8,14 +8,6 @@ Type TGameRules {_exposeToLua}
 	'should licence attributes from the database be randomized
 	Field randomizeLicenceAttributes:Int = False
 
-	'if a player goes bankrupt does the restarting one get stations
-	'and money according to the average of other players?
-	Field adjustRestartingPlayersToOtherPlayers:int = True
-	Field adjustRestartingPlayersToOtherPlayersQuote:Float = 1.0
-	'percentage of a players properties (programme licences, scripts ..) value
-	'which is converted into money
-	Field adjustRestartingPlayersToOtherPlayersPropertyCashRatio:Float = 0.25
-
 	'how much love with betty is needed so she would give you the master
 	'key for all the rooms in the building
 	Field bettyLoveToGetMasterKey:Float = 0.75
@@ -83,9 +75,6 @@ Type TGameRules {_exposeToLua}
 	'are required to make a person a celebrity
 	Field UpgradeInsignificantOnProductionJobsCount:Int = 3
 
-	'penalty to pay if a player sends an xrated movie at the wrong time
-	Field sentXRatedPenalty:int = 25000
-
 	'does the boss has to get visited daily?
 	Field dailyBossVisit:int = True
 	
@@ -107,7 +96,7 @@ Type TGameRules {_exposeToLua}
 	Field newsStudioSortNewsBy:string = "age"
 
 	'=== STATIONMAP ===
-	Field stationInitialIntendedReach:int = 950000
+	Field stationInitialIntendedReach:int = 1000000
 
 
 	'=== DEV.xml ===
@@ -116,7 +105,6 @@ Type TGameRules {_exposeToLua}
 
 	Method Reset()
 		dailyBossVisit = True
-		sentXRatedPenalty = 25000
 
 		elevatorSpeed = 160
 		elevatorWaitAtFloorTime = 1500
@@ -139,8 +127,6 @@ Type TGameRules {_exposeToLua}
 		if not data then return False
 
 		dailyBossVisit = data.GetInt("DEV_DAILY_BOSS_VISIT", dailyBossVisit)
-
-		sentXRatedPenalty = data.GetInt("DEV_SENT_XRATED_PENALTY", sentXRatedPenalty)
 
 		adContractInstancesMax = data.GetInt("DEV_ADCONTRACT_INSTANCES_MAX", adContractInstancesMax)
 		adContractsPerPlayerMax = data.GetInt("DEV_ADCONTRACTS_PER_PLAYER_MAX", adContractsPerPlayerMax)

@@ -37,12 +37,20 @@ Type TPlayerDifficultyCollection Extends TGameObjectCollection
 			if not spec then spec = def 'level info may be empty -> spec=null
 
 			result.SetGUID(level)
+			result.difficultyVersion = 1
 			result.startMoney = ReadInt("startMoney", spec, def, 0, 5000000)
 			result.startCredit = ReadInt("startCredit", spec, def, 0, 5000000)
-			result.creditMaximum = ReadInt("creditMaximum", spec, def, 0, 10000000)
+			result.creditMinimum = ReadInt("creditMinimum", spec, def, 0, 10000000)
+			result.creditBaseValue = ReadInt("creditBaseValue", spec, def, 0, 100000)
+			result.interestRateCredit = ReadFloat("interestRateCredit", spec, def, 0.0, 0.3)
+			result.interestRatePositiveBalance = ReadFloat("interestRatePositiveBalance", spec, def, 0.0, 0.3)
+			result.interestRateNegativeBalance = ReadFloat("interestRateNegativeBalance", spec, def, 0.0, 0.3)
 			result.programmePriceMod = ReadFloat("programmePriceMod", spec, def, 0.1, 5.0)
+			result.newsItemPriceMod = ReadFloat("newsItemPriceMod", spec, def, 0.1, 5.0)
 			result.roomRentMod = ReadFloat("roomRentMod", spec, def, 0.1, 5.0)
-			result.adContractPricePerSpotMax = ReadInt("adContractPricePerSpotMax", spec, def, 500000, 50000000)
+			result.productionTimeMod = ReadFloat("productionTimeMod", spec, def, 0.1, 5.0)
+			result.sentXRatedPenalty = ReadInt("sentXRatedPenalty", spec, def, 0, 500000)
+			result.sentXRatedConfiscateRisk = ReadInt("sentXRatedConfiscateRisk", spec, def, 0, 100)
 			result.adcontractPriceMod = ReadFloat("adcontractPriceMod", spec, def, 0.1, 5.0)
 			result.adcontractProfitMod = ReadFloat("adcontractProfitMod", spec, def, 0.1, 5.0)
 			result.adcontractPenaltyMod = ReadFloat("adcontractPenaltyMod", spec, def, 0.1, 5.0)
@@ -64,7 +72,9 @@ Type TPlayerDifficultyCollection Extends TGameObjectCollection
 			result.satelliteConstructionTime = ReadInt("satelliteConstructionTime", spec, def, 0, 10)
 			result.satelliteDailyCostsMod = ReadFloat("satelliteDailyCostsMod", spec, def, 0.1, 5)
 			result.broadcastPermissionPriceMod = ReadFloat("broadcastPermissionPriceMod", spec, def, 0.1, 5.0)
-			result.adjustRestartingPlayersToOtherPlayersMod = ReadFloat("adjustRestartingPlayersToOtherPlayersMod", spec, def, 0.1, 2.0)
+			result.restartingPlayerPropertyCacheRatio = ReadFloat("restartingPlayerPropertyCacheRatio", spec, def, 0.1, 2.0)
+			result.restartingPlayerReachRatio = ReadFloat("restartingPlayerReachRatio", spec, def, 0.1, 2.0)
+			result.restartingPlayerMoneyRatio = ReadFloat("restartingPlayerMoneyRatio", spec, def, 0.1, 2.0)
 			return result
 		End Function
 		Function ReadInt:Int(key:String, spec:TData, def:TData, minValue:Int, maxValue:Int)
@@ -73,7 +83,7 @@ Type TPlayerDifficultyCollection Extends TGameObjectCollection
 			return result
 		End Function
 		Function ReadFloat:Float(key:String, spec:TData, def:TData, minValue:Float, maxValue:Float)
-			local result:Float = spec.getFloat(key, def.getInt(key))
+			local result:Float = spec.getFloat(key, def.getFloat(key))
 			result = Min(Max(minValue,result),maxValue)
 			return result
 		End Function
@@ -115,12 +125,21 @@ End Function
 
 
 Type TPlayerDifficulty extends TGameObject
+	'version of the difficulty object for determining migration strategy when loading a game
+	Field difficultyVersion:int = 0
 	Field startMoney:int
 	Field startCredit:int
-	Field creditMaximum:int
+	Field creditMinimum:int
+	Field creditBaseValue:int
+	Field interestRateCredit:Float
+	Field interestRatePositiveBalance:Float
+	Field interestRateNegativeBalance:Float
 	Field programmePriceMod:Float = 1.0
+	Field newsItemPriceMod:Float
 	Field roomRentmod:Float = 1.0
-	Field adContractPricePerSpotMax:int
+	Field productionTimeMod:Float
+	Field sentXRatedPenalty:int
+	Field sentXRatedConfiscateRisk:int
 	Field adcontractPriceMod:Float
 	Field adcontractProfitMod:Float
 	Field adcontractPenaltyMod:Float
@@ -141,7 +160,9 @@ Type TPlayerDifficulty extends TGameObject
 	Field satelliteConstructionTime:int
 	Field satelliteDailyCostsMod:Float
 	Field broadcastPermissionPriceMod:Float
-	Field adjustRestartingPlayersToOtherPlayersMod:Float = 1.0
+	Field restartingPlayerPropertyCacheRatio:Float
+	Field restartingPlayerReachRatio:Float
+	Field restartingPlayerMoneyRatio:Float
 
 	Method GenerateGUID:string()
 		return "playerdifficulty-"+id

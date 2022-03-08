@@ -1043,8 +1043,8 @@ endrem
 		'coordinates from game.game.bmx PreparePlayerStep1
 		Local station:TStationBase = map.GetTemporaryAntennaStation(310,260)
 		If station And antennaStationRadius = ANTENNA_RADIUS_NOT_INITIALIZED
-			antennaStationRadius = 80
-			For Local r:Int = 20 To 80
+			antennaStationRadius = 50
+			For Local r:Int = 20 To 50
 				TStationAntenna(station).radius = r
 				If station.getReach(True) > GameRules.stationInitialIntendedReach
 					antennaStationRadius = r
@@ -1053,7 +1053,7 @@ endrem
 			Next
 			If station.getReach(True) < GameRules.stationInitialIntendedReach
 				'player will get cable, reduce station radius
-				antennaStationRadius = 60
+				antennaStationRadius = 40
 			EndIf
 		EndIf
 
@@ -3663,9 +3663,9 @@ Type TStationAntenna Extends TStationBase {_exposeToLua="selected"}
 		Return reachExclusiveMax
 	End Method
 
-
-	'override
-	Method GetBuyPrice:Int() {_exposeToLua}
+	'base price for buy price and maintenance costs
+	'extracted in order to apply separate modifiers
+	Method _BuyPriceBase:Int()
 		'If HasFlag(TVTStationFlag.FIXED_PRICE) and price >= 0 Then Return price
 
 		'price corresponds to "possibly reachable" not actually reached
@@ -3697,14 +3697,19 @@ Type TStationAntenna Extends TStationBase {_exposeToLua="selected"}
 			'building costs for "hardware" (more expensive than sat/cable)
 			buyPrice :+ 0.20 * GetStationMapCollection().CalculateTotalAntennaStationReach(X, Y, 20)
 		EndIf
+		Return buyPrice
+	End Method
+
+	'override
+	Method GetBuyPrice:Int() {_exposeToLua}
+		Local buyPrice:Int = _BuyPriceBase()
+		If buyPrice < 0 return buyPrice
 
 		buyPrice :* GetPlayerDifficulty(String(owner)).antennaBuyPriceMod
 		'no further costs
 
-
 		'round it to 25000-steps
 		buyPrice = Max(0 , Int(Ceil(buyPrice / 25000)) * 25000 )
-
 
 		Return buyPrice
 	End Method
@@ -3718,7 +3723,7 @@ Type TStationAntenna Extends TStationBase {_exposeToLua="selected"}
 		Local difficulty:TPlayerDifficulty=GetPlayerDifficulty(String(owner))
 
 		'== ADD STATIC RUNNING COSTS ==
-		result :+ Ceil(GetBuyPrice() / 5.0)
+		result :+ Ceil(_BuyPriceBase() / 5.0)
 		result :* difficulty.antennaDailyCostsMod
 		'== ADD RELATIVE MAINTENANCE COSTS ==
 		Local maintenanceCostPercentage:Float=difficulty.antennaDailyCostsIncrease
@@ -4757,11 +4762,8 @@ Type TStationMapSection
 	'returns whether a channel needs a permission for the given station type
 	'or not - regardless of whether the channel HAS one or not
 	Method NeedsBroadcastPermission:Int(channelID:Int, stationType:Int = -1)
-		If stationType = TVTStationType.ANTENNA
-			Local startYear:Int = GetWorldTime().GetStartYear()
-			If startYear > 1996
-				Return False
-			EndIf
+		If stationType = TVTStationType.ANTENNA And GetStationMapCollection().antennaStationRadius >= 32
+			return False
 		EndIf
 		Return True
 	End Method
